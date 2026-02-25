@@ -1,37 +1,41 @@
-import React, {useState, useDispatch, } from 'react';
-import styled from 'styled-components';
-import Button from './Button';
-import TextInput from './TextInput';
-
+import React, { useState } from "react";
+import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux";
+import Button from "./Button";
+import TextInput from "./TextInput";
+import { userSignIn } from "../api";
+import { authStart, authSuccess, authFailure } from "../store/authSlice";
 
 const Container = styled.div`
-display: flex; 
-flex-direction: column;
-gap:20px;
-width: 80%;
-@media(max-width: 800px)
-{gap:8px;}`; 
-
-const TextPrimary = styled.div`
-font-size: 30px; 
-font-weight: bold;
-color:${({theme}) => theme.TextSecondary}`; 
-
-const TextSecondary = styled.div`
-color:${({theme}) => theme.menu_secondary_text}`; 
-; 
-
-const ForgotButton = styled.div`
-color:${({theme}) => theme.TextSecondary}; 
-cursor:pointer
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 80%;
+  @media (max-width: 800px) {
+    gap: 8px;
+  }
 `;
 
+const TextPrimary = styled.div`
+  font-size: 30px;
+  font-weight: bold;
+  color: ${({ theme }) => theme.text_primary};
+`;
 
-const SignIn = () => {
-  
-  // const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
-  const [buttonDisabled, setButtonDisabled] = useState(false);
+const TextSecondary = styled.div`
+  color: ${({ theme }) => theme.text_secondary};
+`;
+
+const ErrorText = styled.div`
+  color: #ff6b6b;
+  font-size: 14px;
+`;
+
+export default function SignIn() {
+  const dispatch = useDispatch();
+  const loading = useSelector((s) => s.auth.loading);
+  const error = useSelector((s) => s.auth.error);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -43,51 +47,44 @@ const SignIn = () => {
     return true;
   };
 
-  const handelSignIn = async () => {
-    setLoading(true);
-    setButtonDisabled(true);
-    if (validateInputs()) {
-      await UserSignIn({ email, password })
-        .then((res) => { 
-          alert("signedin");
-          dispatch(loginSuccess(res.data));
-          setLoading(false);
-          setButtonDisabled(false);
-        })
-        .catch((err) => {
-          console.log(err);
-          alert(err.response.data.message);
-          setLoading(false);
-          setButtonDisabled(false);
-        });
+  const handleSignIn = async () => {
+    if (!validateInputs()) return;
+
+    dispatch(authStart());
+    try {
+      const res = await userSignIn({ email, password });
+      dispatch(authSuccess(res.data));
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.response?.data || err.message;
+      dispatch(authFailure(msg));
     }
   };
 
   return (
     <Container>
-        <div>
-            <TextPrimary>Welcome to the Budgeting</TextPrimary>
-            <TextSecondary>Please Login with your details</TextSecondary>
-        </div>
+      <div>
+        <TextPrimary>Welcome back</TextPrimary>
+        <TextSecondary>Sign in to continue</TextSecondary>
+      </div>
 
-        <TextInput 
-          label="Email Address" 
-          placeholder={"Enter your email address"} 
-          value={email}
-          handelChange={(e) => setEmail(e.target.value)}
-          />
-        
-        <div>
-            <TextInput label="Password" placeholder={"Enter your password"}  password
-            value={password}
-            handelChange={(e) => setPassword(e.target.value)}></TextInput>
-            <ForgotButton style={{textAlign: 'right'}}>Forgot Password</ForgotButton>
-        </div>
-        
-        <Button text="Sign In"  onClick={handelSignIn}
-          ></Button>
+      <TextInput
+        label="Email Address"
+        placeholder="Enter your email address"
+        value={email}
+        handelChange={(e) => setEmail(e.target.value)}
+      />
+
+      <TextInput
+        label="Password"
+        placeholder="Enter your password"
+        password
+        value={password}
+        handelChange={(e) => setPassword(e.target.value)}
+      />
+
+      {error && <ErrorText>{error}</ErrorText>}
+
+      <Button text="Sign In" onClick={handleSignIn} isLoading={loading} isDisabled={loading} />
     </Container>
-  )
+  );
 }
-
-export default SignIn

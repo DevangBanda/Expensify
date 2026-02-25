@@ -1,112 +1,100 @@
-import React, {useState} from 'react';
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import logo from "../utils/logo.png";
-import {Link, NavLink} from "react-router-dom"
+import { logout } from "../store/authSlice";
 
 const Container = styled.div`
-display: flex; 
-justify-content: space-between; 
-align-items: center; 
-height: 100px;
-width: 100vw;
-position: sticky;
-z-index: 10;
-color: white;
-border-bottom: 1px solid black;
-box-shadow: 0 4px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 72px;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: ${({ theme }) => theme.bg};
+  border-bottom: 1px solid ${({ theme }) => theme.bgLight};
 `;
 
+const Left = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
 
-const MobileNavItems = styled.div`
-display: none;
-`; 
+const Logo = styled.img`
+  height: 44px;
+`;
 
-
-const NavItems = styled.div`
-display: flex; 
-justify-content: space-between; 
-width: 40%;
-:
-
-@media(max-width: 400px)
-{display: none;
-}
-`; 
-
-const MobileMenu = styled.div`
-display: none
-`; 
-
-const NavLogo = styled.div`
+const Links = styled.div`
+  display: flex;
+  gap: 14px;
+  align-items: center;
 `;
 
 const LinkNav = styled(NavLink)`
+  text-decoration: none;
+  color: ${({ theme }) => theme.text_secondary};
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 10px;
+
+  &.active {
+    color: ${({ theme }) => theme.text_primary};
+    background: ${({ theme }) => theme.bgLight};
+  }
 `;
 
-
-
-const Logo = styled.img`
-    height: 90px;
-    padding-left: 30px;
+const Right = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
-const MenuIcon = styled.div`
+const Pill = styled.div`
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.bgLight};
+  border: 1px solid ${({ theme }) => theme.bgLight};
+  color: ${({ theme }) => theme.text_primary};
+  font-size: 14px;
 `;
 
-const MenuImg = styled.div`
+const LogoutBtn = styled.button`
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid ${({ theme }) => theme.primary};
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  cursor: pointer;
 `;
 
-const UserContainer = styled.div`
-`;  
+export default function Navbar() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((s) => s.auth.user);
 
-const UserImg = styled.img`
-`;
-
-const UserLogout = styled.div`
-`;
-
-
-const Navbar = () => {
-
-    const [isOpen, setisOpen] = useState(false);
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/auth");
+  };
 
   return (
     <Container>
-        <MobileMenu>
-            <MenuIcon onClick={() => setisOpen(!isOpen)}>
-                <MenuImg></MenuImg>
-            </MenuIcon>
-        </MobileMenu>
+      <Left>
+        <Logo src={logo} alt="Logo" />
+        <Links>
+          <LinkNav to="/">Dashboard</LinkNav>
+          <LinkNav to="/budget">Budget</LinkNav>
+        </Links>
+      </Left>
 
-        <NavLogo>
-            <Logo src = {logo} />
-        </NavLogo>
-
-        <MobileNavItems> 
-            <LinkNav to="/">DashBoard</LinkNav>
-            <LinkNav to="/budget">Budget</LinkNav>
-            <LinkNav to="/">GHI</LinkNav>
-            <LinkNav to="/">JKL</LinkNav>
-        </MobileNavItems>
-
-        <NavItems>
-            <LinkNav to="/">DashBoard</LinkNav>
-            <LinkNav to="/budget">Budget</LinkNav>
-            <LinkNav to="/">GHI</LinkNav>
-            <LinkNav to="/">JKL</LinkNav>
-        </NavItems>
-
-        <UserContainer>
-            <UserImg>
-
-            </UserImg>
-
-            <UserLogout>
-               
-            </UserLogout>
-        </UserContainer>
+      <Right>
+        {user?.name && <Pill>{user.name}</Pill>}
+        <LogoutBtn onClick={handleLogout}>Logout</LogoutBtn>
+      </Right>
     </Container>
-  )
+  );
 }
-
-export default Navbar

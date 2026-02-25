@@ -1,31 +1,24 @@
-import React from 'react'; 
-import styled from 'styled-components';
-import Button from '../Components/Button';
-import Button_Dash from './Button_Dash';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-
-const categoryName = {
-    flex: '0.8',
-    textAlign: 'center',
-    fontSize: '1rem', 
-}
+import React from "react";
+import styled from "styled-components";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import Button_Dash from "./Button_Dash";
 
 const Container = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
-  border-radius: 30px;
-  border: 5px solid black;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  border: 1px solid ${({ theme }) => theme.bgLight};
+  background: ${({ theme }) => theme.bg};
 `;
 
-const CategoriesDisplay = (props) => {
-    const {name, onClick, id} = props
+export default function CategoriesDisplay({ name, onClick, id }) {
   return (
-    <Container id = {id}><h2 style={categoryName}>{name}</h2>
-        <Button_Dash id={id} onClick={() => onClick(id)} component={<DeleteForeverIcon/>}></Button_Dash>
+    <Container>
+      <div style={{ flex: 1, textAlign: "center", fontSize: "1rem", fontWeight: 600 }}>{name}</div>
+      <Button_Dash onClick={() => onClick(id)} component={<DeleteForeverIcon />} text="" />
     </Container>
-
-  )
+  );
 }
-
-export default CategoriesDisplay

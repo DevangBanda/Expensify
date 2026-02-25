@@ -1,83 +1,69 @@
-import { Category } from '@mui/icons-material';
-import React, {useEffect, useState} from 'react'; 
-import styled from 'styled-components';
+import React from "react";
+import styled from "styled-components";
 
-const Container = styled.div`
-flex: 1;
-display: flex; 
-max-height: 20%;
-justify-content: space-around;
-align-items: center;
-border-radius: 15px;
-font-size: 20px;
-background: ${({theme}) => theme.expenseDisplay};
-*{padding: 10px 10px;}
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 520px;
+  overflow: auto;
 `;
 
-const NewContainer = styled.div`
-flex: 1; 
-display: flex;
-flex-direction: column;
-min-height: 500px;
-gap:10px;
-overflow-y: auto;
-background: ${({ theme }) => theme.bgLight};
-border: 1px solid ${({ theme }) => theme.primary};
-border-radius: 20px;`
+const Row = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px;
+  font-size: 15px;
+  background: ${({ theme }) => theme.expenseDisplay};
+  padding: 10px;
+  gap: 10px;
 
-const Date = styled.div`
-display: flex;
-justify-content: center;
-flex: 0.6;
-border-right: 3px solid ${({theme}) => theme.bgLight};
- `;
-
-const Desc = styled.div`
-display: flex;
-justify-content: center;
-flex: 1;
-border-right: 3px solid ${({theme}) => theme.bgLight};
-`;
-
-const Amount = styled.div`
-display: flex;
-justify-content: center;
-flex: 1;
-border-right: 3px solid ${({theme}) => theme.bgLight};
-`;
-
-const Type = styled.div`
-flex: 0.6;
-display: flex;
-justify-content: center;
-`;
-
-
-const TryExpense =React.memo(({list, handleDeleteClick}) => {
-
-  const [expenseList, setExpenseList] = useState([null]);
-
-    useEffect(() => {
-        setExpenseList(list);
-    }, []);
-
-  const handleDelete = (id) => {
-    handleDeleteClick(id);
+  > div {
+    padding: 0 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+`;
 
+const CellDate = styled.div`
+  flex: 0.8;
+`;
+const CellDesc = styled.div`
+  flex: 2;
+`;
+const CellAmt = styled.div`
+  flex: 0.9;
+  text-align: right;
+`;
+const CellCat = styled.div`
+  flex: 1.1;
+  text-align: center;
+`;
+
+const DeleteBtn = styled.button`
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid ${({ theme }) => theme.primary};
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  cursor: pointer;
+`;
+
+export default React.memo(function TryExpense({ list = [], handleDeleteClick }) {
   return (
-    <NewContainer>
-        {list.map((exp, index) => (
-            <Container id={exp._id} key={index}>
-                <Date>{exp.dateStr}</Date>
-                <Desc>{exp.description}</Desc>
-                <Amount>{exp.amount}</Amount>
-                <Amount>{exp.categoryName}</Amount>
-                <button key={exp._id} onClick = {() => handleDelete(exp._id)}>Delete</button>
-            </Container>))}
-        
-    </NewContainer>
-  )
-})
-
-export default TryExpense
+    <List>
+      {list.map((exp) => (
+        <Row key={exp._id}>
+          <CellDate title={exp.dateStr}>{exp.dateStr}</CellDate>
+          <CellDesc title={exp.description}>{exp.description}</CellDesc>
+          <CellAmt>${Number(exp.amount || 0).toFixed(2)}</CellAmt>
+          <CellCat title={exp.categoryName}>{exp.categoryName}</CellCat>
+          <DeleteBtn onClick={() => handleDeleteClick(exp._id)}>Delete</DeleteBtn>
+        </Row>
+      ))}
+      {list.length === 0 && <div style={{ opacity: 0.8 }}>No expenses yet.</div>}
+    </List>
+  );
+});

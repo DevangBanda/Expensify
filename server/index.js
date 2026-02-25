@@ -1,32 +1,42 @@
-import express from "express"; 
-// import { configDotenv } from "dotenv";
+import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import dotenv from 'dotenv';
-import userRoutes from './Routes/userRoutes.js';
+import dotenv from "dotenv";
 
-const app = express();
+import authRoutes from "./Routes/authRoutes.js";
+import categoryRoutes from "./Routes/categoryRoutes.js";
+import expenseRoutes from "./Routes/expenseRoutes.js";
+
 dotenv.config();
 
-//Middleware
-app.use(express.json());
-app.use(cors()); 
-app.use(express.json({limit: "50mb"})); //Register the middleware with limit of 50mb
-app.use(express.urlencoded({extended: true})); //Register the middleware used to parse incoming requests with URL encoded payloads
+const app = express();
 
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/health", (req, res) => res.status(200).send("ok"));
+
+app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/expenses", expenseRoutes);
+
+// Simple error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.statusCode || 500;
+  return res.status(status).json({ message: err.message || "Server error" });
+});
+
+const PORT = process.env.PORT || 5100;
 
 mongoose
-        .connect(process.env.mongoDB_URL)
-        .then((res) => {     
-            app.listen(process.env.PORT, () => 
-                {
-                    console.log("App is listening at Port 5100");
-                })
-            console.log("Connected to Database");      
-        })
-        .catch((error) =>{
-        
-            console.log(error);
-        });
-
-app.use("/", userRoutes);
+  .connect(process.env.mongoDB_URL)
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+    console.log("Connected to MongoDB");
+  })
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
+  });

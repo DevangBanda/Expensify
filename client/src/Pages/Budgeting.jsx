@@ -1,194 +1,153 @@
-import React, {useRef, useState, useEffect} from 'react'; 
-import styled from 'styled-components';
-import Navbar from '../Components/Navbar';
-import Button_Dash from '../Components/Button_Dash';
-import ExpenseDisplay from '../Components/Expense/ExpenseDisplay';
-import AddIcon from '@mui/icons-material/Add';
-import { addExpenseCSV } from '../api';
-import TextInput from '../Components/TextInput';
-import { CloudQueueSharp } from '@mui/icons-material';
+import React, { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import Papa from "papaparse";
-import Categories from '../Components/DisplayComponents/Categories';
+import AddIcon from "@mui/icons-material/Add";
 
-import {addCategory, getCategoryList, deleteCategoryList} from '../api/index';
+import Button_Dash from "../Components/Button_Dash";
+import Categories from "../Components/DisplayComponents/Categories";
+import { addCategory, deleteCategory, getCategoryList, importExpensesCSV } from "../api";
 
 const Container = styled.div`
-display: flex;
-flex-direction: column;
-height: 100vh;
-  overflow: hidden; 
-`;
-
-const Division = styled.div`
-display: flex;
-flex-direction: row;
-justify-content :space-around; 
-align-items: center;
-flex: 0 0 auto; 
-`;
-
-const Info = styled.h3`
-width: fit-content;
-flex: 0 0 auto;`;
-
-const UploadedDiv = styled.div`
-flex: 1; 
-overflow-y: auto;
-display: flex; 
-flex-direction: column; 
-align-items: center;
-gap: 10px;
-background: ${({ theme }) => theme.bg};
-box-shadow: 1px 20px 35px 0px ${({ theme }) => theme.primary + 40};
-border: 1px solid ${({ theme }) => theme.primary};
-border-radius: 10px;`;
-
-const ExpenseAndCategory = styled.div`
-display: flex;
-flex: 1;
-width: 98vw;
-padding: none;
-overflow-y: auto;
-justify-content: center;
-@media(max-width:700px)
-{
+  display: flex;
   flex-direction: column;
-}`;
-
-const ExpensesContainer = styled.div`
-flex: ${(props) => (props.primary ? '0.75' : '0.25')}; 
-display: flex;
-flex-direction: column;
-gap:10px;
-overflow-y: auto;
-background: ${({ theme }) => theme.bgLight};
-border: 1px solid ${({ theme }) => theme.primary};
-border-radius: 20px;
-@media(max-width: 700px)
-{
-  flex: ${(props) => (props.primary ? '0.7' : '0.3')};
-}
+  height: 100%;
+  overflow: hidden;
 `;
 
+const Header = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  flex-wrap: wrap;
+`;
 
-const Budgeting = React.memo(() => {
-  
-  //Category Section
-  //useRef for the name of the category
-  const inputValueRef = useRef('');
-  //useState for the the categories saved in MongoDB
+const Card = styled.div`
+  flex: 1;
+  min-width: 320px;
+  padding: 14px;
+  border-radius: 12px;
+  background: ${({ theme }) => theme.bgLight};
+  border: 1px solid ${({ theme }) => theme.bgLight};
+  box-shadow: 1px 6px 10px 1px black;
+`;
+
+const Grid = styled.div`
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  flex: 1;
+  overflow: auto;
+  flex-wrap: wrap;
+`;
+
+export default function Budgeting() {
+  const inputValueRef = useRef("");
   const [categoryList, setCategoryList] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [importStatus, setImportStatus] = useState("");
 
-  //Expenses Section
-  const [ExpensesList, setExpensesList] = useState([]);
+  const onInputChange = (newValue) => {
+    inputValueRef.current = newValue;
+  };
 
-  //Category Section
-  //Update the value of the useRef as the input value is updated
-  const handleInputChange = (newValue) => {
-    inputValueRef.current = newValue; // Update the ref without re-rendering
-  }
+  const refreshCategories = async () => {
+    try {
+      const res = await getCategoryList();
+      setCategoryList(res.data || []);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
-  //Function to add expense into the list of expenses
+  useEffect(() => {
+    refreshCategories();
+  }, []);
+
+  const addNewCategory = async () => {
+    const name = (inputValueRef.current || "").trim();
+    if (!name) return alert("Category name can't be empty");
+    try {
+      await addCategory({ categoryName: name });
+      inputValueRef.current = "";
+      await refreshCategories();
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    try {
+      await deleteCategory(id);
+      await refreshCategories();
+    } catch (e) {
+      alert(e?.response?.data?.message || "Failed to delete category");
+    }
+  };
+
   const handleUploadFile = async () => {
-
-    if(!uploadedFile){
-      alert("no file selected."); 
-      return
+    if (!uploadedFile) {
+      alert("No file selected.");
+      return;
     }
 
-    Papa.parse(uploadedFile ,{
-        header: true,
-        skipEmptyLines: true,
-        complete: async function (results) {
-          console.log(results.data);
-          await addExpenseCSV(results.data)
-          .then((res) => {
-              console.log(res)
-          })
-          .then(data => console.log(data))
-          .catch()
-          {
-           
-          }
-        },
+    setImportStatus("Parsing CSV...");
+
+    Papa.parse(uploadedFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async function (results) {
+        try {
+          const rows = (results.data || []).filter(Boolean);
+          setImportStatus(`Importing ${rows.length} rows...`);
+          await importExpensesCSV(rows);
+          setImportStatus(`Imported ${rows.length} rows ✅`);
+        } catch (e) {
+          console.log(e);
+          setImportStatus(e?.response?.data?.message || "CSV import failed");
+        }
+      },
+      error: function () {
+        setImportStatus("Failed to parse CSV");
+      },
     });
-    
-
   };
-
-  //Display categories from Database
-  const getCategoryMongo = async() => {
-      await getCategoryList()
-        .then((res) =>{
-            const data = res.data; 
-            setCategoryList(data);
-            console.log(data);
-        })
-        .catch((error) => {
-          console.log(error);
-        })
-
-  }
-
-  //Function to handle add category button click
-  const addNewCategory = async() => {
-   await addCategory({categoryName: inputValueRef.current})
-   .then((res) =>
-  {
-    getCategoryMongo();
-    console.log(res);
-  })
-  .catch((error) =>
-  {
-    console.log(error);
-  });
-  };
-
-  //Function to handle delete category button click
-  const handleDeleteCategory = async(id) => {
-    await deleteCategoryList(`${id}`)
-    .then((res) => {console.log(res); 
-      getCategoryMongo();
-    })
-  }; 
-
-  
-
-  //Expenses Section
-const getRecentExpensesMongo = () => {
-  
-};
-
-
-  //Run the functions on mount
-  useEffect(() =>{
-    getCategoryMongo();
-  }, []);
 
   return (
     <Container>
-        <Division> 
-            <Info>Last File uploaded on: </Info>   
-            <input onChange={(e) => {setUploadedFile(e.target.files[0])}} type = "file"/>
-            <Button_Dash text="Upload" component={<AddIcon/>} onClick={handleUploadFile}/> 
-        </Division>
-        <UploadedDiv>
-            <Info>Recent added Expenses</Info>
-            <ExpenseAndCategory>
-              <ExpensesContainer primary>
-                  
-              </ExpensesContainer> 
+      <Header>
+        <div style={{ fontWeight: 800, fontSize: 18 }}>Budget Tools</div>
+        <input type="file" accept=".csv" onChange={(e) => setUploadedFile(e.target.files?.[0] || null)} />
+        <Button_Dash text="Import CSV" component={<AddIcon />} onClick={handleUploadFile} />
+        {importStatus && <div style={{ opacity: 0.85 }}>{importStatus}</div>}
+      </Header>
 
-              <ExpensesContainer>
-                <Categories addNewCategory={addNewCategory} onInputChange={handleInputChange} onDelete={handleDeleteCategory} list={categoryList}/>
-              </ExpensesContainer>
+      <Grid>
+        <Card>
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>Manage Categories</div>
+          <Categories
+            addNewCategory={addNewCategory}
+            onInputChange={onInputChange}
+            onDelete={handleDeleteCategory}
+            list={categoryList}
+          />
+        </Card>
 
-            </ExpenseAndCategory>
-        </UploadedDiv>
-        
+        <Card>
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>CSV Format</div>
+          <div style={{ opacity: 0.9, lineHeight: 1.6 }}>
+            Your CSV should include headers like:
+            <pre style={{ marginTop: 10 }}>
+dateStr,description,amount,categoryName
+01/15/2026,Coffee,4.75,Food
+01/16/2026,Bus pass,112,Transport
+            </pre>
+            <div style={{ fontSize: 13, opacity: 0.9 }}>
+              Tip: If a <b>categoryName</b> doesn&apos;t exist yet, it will be created automatically during import.
+            </div>
+          </div>
+        </Card>
+      </Grid>
     </Container>
-  )
-});
-
-export default Budgeting
+  );
+}

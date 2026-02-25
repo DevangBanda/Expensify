@@ -1,33 +1,41 @@
 import axios from "axios";
 
-const API = axios.create({
-    baseURL : "http://localhost:5100/",
-});
+// Vite env: set VITE_API_URL=http://localhost:5100/api
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:5100/api";
 
-export const addExpenseCSV = async(data) =>  await API.post(`/budget/addExpenseCSV`, data, {
-    onUploadProgress: (ProgressEvent) => {console.log(ProgressEvent.progress * 100)},
-    headers: {
-        "Custom-Header":"value",
+const API = axios.create({ baseURL });
+
+// Attach token from persisted redux state (localStorage)
+API.interceptors.request.use((config) => {
+  try {
+    const persisted = localStorage.getItem("persist:root");
+    if (persisted) {
+      const root = JSON.parse(persisted);
+      const auth = root.auth ? JSON.parse(root.auth) : null;
+      const token = auth?.token;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
     }
+  } catch {
+    // ignore
+  }
+  return config;
 });
 
-export const userSignUp = async(data) => await API.post(data)(`/userSignUp`. data);
-export const userSignIn = async(data) => await API.post(data)(`/userSignIn`. data);
+// ---------- Auth ----------
+export const userSignUp = (data) => API.post("/auth/signup", data);
+export const userSignIn = (data) => API.post("/auth/login", data);
+export const getMe = () => API.get("/auth/me");
 
+// ---------- Categories ----------
+export const addCategory = (data) => API.post("/categories", data);
+export const getCategoryList = () => API.get("/categories");
+export const deleteCategory = (id) => API.delete(`/categories/${id}`);
 
-//Category Section 
-export const addCategory = async(data) => await API.post(`/budget/addCategory`, data, {
-    onUploadProgress: (ProgressEvent) => {console.log(ProgressEvent.progress * 100)},
-    headers: {
-        "Custom-Header":"value",
-    }
-});
+// ---------- Expenses ----------
+export const addExpense = (data) => API.post("/expenses", data);
+export const getExpenses = (params) => API.get("/expenses", { params });
+export const updateExpense = (id, data) => API.put(`/expenses/${id}`, data);
+export const deleteExpense = (id) => API.delete(`/expenses/${id}`);
 
-export const getCategoryList = async() => API.get(`/budget/getCategoryList`);
-export const deleteCategoryList = async(id) => API.delete(`/budget/deleteCategoryList/${id}`);
-
-
-//Expenses Section 
-export const addExpense = async(data) => API.post(`/dashboard/addExpense`, data);
-export const getExpense = async() => API.get(`/dashboard/getExpense`);
-export const deleteExpense = async(id) => API.delete(`/dashboard/deleteExpense/${id}`);
+// ---------- CSV Import ----------
+export const importExpensesCSV = (rows) => API.post("/expenses/import/csv", { rows });

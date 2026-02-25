@@ -1,19 +1,15 @@
-import mongoose, { mongo } from "mongoose";
-import { getDefaultHighWaterMark } from "stream";
+import mongoose from "mongoose";
 
-const dataSchema = new mongoose.Schema({
-    // user:{
-    //     type: mongoose.Schema.Types.ObjectId, 
-    //     ref:"User", 
-    //     required: true
-    // },
-    dateStr: {type: String, default: Date.now, required: true}, 
-    description: {type: String, required: true}, 
-    amount: {type: String, required: true}, 
-    categoryId:{type: String, required: true},
-    categoryName: {type: String, default:"Expense"},
-  //  category: {type: mongoose.Schema.Types.ObjectId, ref:"Category", default: "Expenses", required: true}, 
+const ExpenseSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    date: { type: Date, required: true, index: true },
+    description: { type: String, required: true, trim: true },
+    amount: { type: Number, required: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
+    categoryName: { type: String, required: true }, // denormalized for fast charts/UI
+  },
+  { timestamps: true }
+);
 
-});
-
-export default mongoose.model("Expense", dataSchema);
+export default mongoose.model("Expense", ExpenseSchema);
