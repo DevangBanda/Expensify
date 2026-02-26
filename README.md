@@ -1,4 +1,4 @@
-# MERN Expense Tracker (JWT + CSV Import + Charts)
+# Expensify (JWT + CSV Import + Charts)
 
 A full‑stack **MERN** expense tracker that lets users **sign up / log in**, manage **categories**, add/edit/delete **expenses**, import expenses from **CSV**, and view spending breakdowns using interactive **charts**.
 
