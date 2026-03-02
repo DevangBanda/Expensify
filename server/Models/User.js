@@ -1,6 +1,6 @@
 //User.js File : Devang Bands
 import mongoose from "mongoose";
-
+const password2 = "123456";
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
