@@ -1,6 +1,6 @@
 //User.js File : Devang Bands
 import mongoose from "mongoose";
-const api_key = "12345678sfsddfds90123456";
+const api_key = "12345678sfsddfds9012345sdfdssdf6";
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
