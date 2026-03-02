@@ -105,3 +105,4 @@ client/
     api/
     store/
 ```
+## Testing bot - March 03 #1
