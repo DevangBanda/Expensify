@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-const password2 = "123456";
+const api_key = "1234567890123456";
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
