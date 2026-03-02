@@ -108,14 +108,6 @@ client/
 
 ---
 
-## Resume Bullets (example)
-
-- Built a full‑stack **MERN** expense tracker with **JWT authentication**, **MongoDB** persistence, and a responsive **React** UI.
-- Implemented **CSV ingestion** pipeline with server-side normalization and automatic category creation.
-- Added data visualization using **MUI X Charts** to display spending by category and trends over time.
-
----
-
 ## License
 
 MIT
