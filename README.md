@@ -105,9 +105,3 @@ client/
     api/
     store/
 ```
-
----
-
-## License
-
-MIT
